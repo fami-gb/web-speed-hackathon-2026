@@ -7,41 +7,36 @@ interface Props {
 }
 
 export const InfiniteScroll = ({ children, fetchMore, items }: Props) => {
-  const latestItem = items[items.length - 1];
-  const prevReachedRef = useRef(false);
+  const observerTarget = useRef<HTMLDivElement>(null);
+  const fetchMoreRef = useRef(fetchMore);
+  fetchMoreRef.current = fetchMore;
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
 
   useEffect(() => {
-    let ticking = false;
-
-    const handler = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          // 最下部に達したかを1回だけ判定（2の18乗回の無駄なループを削除）
-          const hasReached = window.innerHeight + Math.ceil(window.scrollY) >= document.body.offsetHeight - 50; // 余白を少し持たせる
-
-          if (hasReached && !prevReachedRef.current) {
-            if (latestItem !== undefined) {
-              fetchMore();
-            }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0] && entries[0].isIntersecting) {
+          const latestItem = itemsRef.current[itemsRef.current.length - 1];
+          if (latestItem !== undefined) {
+            fetchMoreRef.current();
           }
+        }
+      },
+      { rootMargin: "400px" }
+    );
 
-          prevReachedRef.current = hasReached;
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
 
-    prevReachedRef.current = false;
-    handler();
+    return () => observer.disconnect();
+  }, []);
 
-    window.addEventListener("scroll", handler, { passive: true });
-    window.addEventListener("resize", handler, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", handler);
-      window.removeEventListener("resize", handler);
-    };
-  }, [latestItem, fetchMore]);
-
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      <div ref={observerTarget} style={{ height: "1px" }} />
+    </>
+  );
 };
