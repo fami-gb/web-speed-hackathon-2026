@@ -1,4 +1,3 @@
-import { AspectRatioBox } from "@web-speed-hackathon-2026/client/src/components/foundation/AspectRatioBox";
 
 interface Props {
   src: string;
@@ -9,14 +8,12 @@ interface Props {
  */
 export const PausableMovie = ({ src }: Props) => {
   return (
-    <AspectRatioBox aspectHeight={1} aspectWidth={1}>
-      <img
-        src={src}
-        alt="GIFアニメーション"
-        loading="lazy"
-        decoding="async"
-        className="h-full w-full object-cover"
-      />
-    </AspectRatioBox>
+    <img
+      src={src}
+      alt="GIFアニメーション"
+      loading="lazy"
+      decoding="async"
+      className="h-full w-full object-cover"
+    />
   );
 };
